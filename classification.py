@@ -112,7 +112,7 @@ for i in range(num_images):
   plot_image(i, predictions, test_labels, test_images)
   plt.subplot(num_rows, 2*num_cols, 2*i+2)
   plot_value_array(i, predictions, test_labels)
-plot.show()
+plot.savefig("test.png")
 
 # Grab an image from the test dataset
 img = test_images[0]
