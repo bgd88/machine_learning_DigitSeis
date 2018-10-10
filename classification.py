@@ -99,7 +99,11 @@ plt.subplot(1,2,1)
 plot_image(i, predictions, test_labels, test_images)
 plt.subplot(1,2,2)
 plot_value_array(i, predictions,  test_labels)
+<<<<<<< HEAD
 plt.savefig("test2.png")
+=======
+plt.savefig("test1.png")
+>>>>>>> 241921f96e27f8a2da795fef9d119818c9276738
 
 # Plot the first X test images, their predicted label, and the true label
 # Color correct predictions in blue, incorrect predictions in red
