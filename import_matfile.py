@@ -1,7 +1,8 @@
 import scipy.io
 import glob
+from myPath import dataDir
 
-dataDir = "../../data/images/"
+
 filenames = glob.glob(dataDir + "*.mat")
 
 testFile = filenames[0]
