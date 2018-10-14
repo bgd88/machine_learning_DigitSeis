@@ -17,6 +17,13 @@ train_data = {
     "output": f["pixID"].value}
 print(train_data)
 
+# Convert to Tensor
+input_tensor = tf.convert_to_tensor(train_data["input"])
+labels_tensor = tf.convert_to_tensor(train_data["output"])
+
+# Package Tensors
+training_tensor = [(input_tensor,labels_tensor)]
+
 # Define neural net architecture
 class DigitSeisModel(tf.keras.Model):
     def __init__(self):
@@ -50,7 +57,7 @@ def grad(model, inputs, targets):
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001)
 
 # Time to Train!
-for (i, (x, y)) in enumerate(dataset_train):
+for (i, (x, y)) in enumerate(training_tensor):
     # Calculate derivates of the input function with respect to its parameters
     grads = grad(neuralNet, x, y)
     # Apply the gradient to the model
