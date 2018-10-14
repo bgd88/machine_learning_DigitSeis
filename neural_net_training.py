@@ -27,27 +27,30 @@ print(training_tensor)
 # Package Tensors
 # training_tensor = [tf.data.Dataset.from_tensor_slices(input_tensor),tf.data.Dataset.from_tensor_slices(labels_tensor)]
 
-# Define neural net architecture
-class DigitSeisModel(tf.keras.Model):
-    def __init__(self):
-        super(DigitSeisModel, self).__init__()
-        self.input_layer = tf.keras.layers.Dense(units=2000000)
-        self.dense1 = tf.keras.layers.Dense(units=1000000)
-        self.output_layer = tf.keras.layers.Dense(units=8000000, activation=tf.nn.softmax)
+# # Define neural net architecture
+# class DigitSeisModel(tf.keras.Model):
+#     def __init__(self):
+#         super(DigitSeisModel, self).__init__()
+#         self.input_layer = tf.keras.layers.Dense(units=2000000)
+#         self.dense1 = tf.keras.layers.Dense(units=1000000)
+#         self.output_layer = tf.keras.layers.Dense(units=8000000, activation=tf.nn.softmax)
 
-        def call(self, input):
-            """Runs the model."""
-            result = self.input_layer(input)
-            result = self.dense1(result)
-            result = self.output_layer(result)
-            return result
+#         def call(self, input):
+#             """Runs the model."""
+#             result = self.input_layer(input)
+#             result = self.dense1(result)
+#             result = self.output_layer(result)
+#             return result
 
-# Create neural net
-neuralNet = DigitSeisModel()
+# # Create neural net
+# neuralNet = DigitSeisModel
 
+neuralNet = tf.keras.Sequential([
+	tf.keras.layers.Dense(1000000, input_shape=(784,)),
+	tf.keras.layers.Dense(units=8000000, activation=tf.nn.softmax)])
 # Define loss function
 def loss(model, input, targets):
-    prediction = model.call(input)
+    prediction = model(input)
     return tf.losses.categorical_cross_entropy(y_true=targets, y_predict=prediction)
 
 # Define function to measure gradient
