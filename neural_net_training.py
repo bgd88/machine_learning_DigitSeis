@@ -13,7 +13,7 @@ print(tf.executing_eagerly())
 from import_matfile import *
 train_data = {
     "input": f["imInt"].value,
-    "parameters": [f["x"].value, f["y"].value], 
+    "parameters": [f["x"].value, f["y"].value, f["nc"].value, f["nr"].value], 
     "output": f["pixID"].value}
 print(train_data)
 
