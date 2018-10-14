@@ -12,9 +12,9 @@ print(tf.executing_eagerly())
 # Import Data
 from import_matfile import *
 train_data = {
-    "input": f["imInt"].value,
+    "input": f["imInt"].value.astype('int'),
     "parameters": [f["x"].value, f["y"].value, f["nc"].value, f["nr"].value], 
-    "output": f["pixID"].value}
+    "output": f["pixID"].value.astype('int')}
 print(train_data)
 
 # Convert to Tensor
@@ -59,6 +59,9 @@ optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001)
 # Time to Train!
 for (i, (x, y)) in enumerate(training_tensor):
     # Calculate derivates of the input function with respect to its parameters
+    print("DEBUG: ")
+    print(x)
+    print(y)
     grads = grad(neuralNet, x, y)
     # Apply the gradient to the model
     optimizer.apply_gradients(zip(grads, neuralNet.variables),
