@@ -19,9 +19,10 @@ train_data = {
 print(train_data)
 
 # Convert to Tensor
-training_tensor = tf.data.Dataset.from_tensor_slices(tf.convert_to_tensor((train_data["input"], train_data["output"])))
+training_tensor = tf.data.Dataset.from_tensor_slices((train_data["input"], train_data["output"]))
 # labels_tensor = tf.manip.reshape(tf.convert_to_tensor(train_data["output"]),[2000000])
-
+print("DEBUG:")
+print(training_tensor)
 
 # Package Tensors
 # training_tensor = [tf.data.Dataset.from_tensor_slices(input_tensor),tf.data.Dataset.from_tensor_slices(labels_tensor)]
