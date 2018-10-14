@@ -2,6 +2,7 @@
 
 # Import necessary libraries
 import tensorflow as tf
+import itertools
 
 # Enable eager execution (for testing only)
 tf.enable_eager_execution()
@@ -18,11 +19,12 @@ train_data = {
 print(train_data)
 
 # Convert to Tensor
-input_tensor = tf.convert_to_tensor(train_data["input"])
-labels_tensor = tf.convert_to_tensor(train_data["output"])
+training_tensor = tf.data.Dataset.from_tensor_slices(tf.convert_to_tensor((train_data["input"], train_data["output"])))
+# labels_tensor = tf.manip.reshape(tf.convert_to_tensor(train_data["output"]),[2000000])
+
 
 # Package Tensors
-training_tensor = [(input_tensor,labels_tensor)]
+# training_tensor = [tf.data.Dataset.from_tensor_slices(input_tensor),tf.data.Dataset.from_tensor_slices(labels_tensor)]
 
 # Define neural net architecture
 class DigitSeisModel(tf.keras.Model):
