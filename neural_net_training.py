@@ -5,10 +5,10 @@ import tensorflow as tf
 import itertools
 
 # Enable eager execution (for testing only)
-# tf.enable_eager_execution()
+tf.enable_eager_execution()
 
-# # Check that it worked
-# print(tf.executing_eagerly())
+# Check that it worked
+print(tf.executing_eagerly())
 
 # Import Data
 from import_matfile import *
