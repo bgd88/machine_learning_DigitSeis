@@ -68,6 +68,8 @@ for (i, (x, y)) in enumerate(training_tensor):
     print("DEBUG: ")
     print(x)
     print(y)
+    x=tf.to_float(x)
+    y=tf.to_float(y)
     grads = grad(neuralNet, x, y)
     # Apply the gradient to the model
     optimizer.apply_gradients(zip(grads, neuralNet.variables),
