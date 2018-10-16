@@ -5,10 +5,10 @@ import tensorflow as tf
 import itertools
 
 # Enable eager execution (for testing only)
-tf.enable_eager_execution()
+# tf.enable_eager_execution()
 
-# Check that it worked
-print(tf.executing_eagerly())
+# # Check that it worked
+# print(tf.executing_eagerly())
 
 # Import Data
 from import_matfile import *
@@ -46,7 +46,7 @@ print(training_tensor)
 # neuralNet = DigitSeisModel
 
 neuralNet = tf.keras.Sequential([
-	tf.keras.layers.Dense(1000000, input_shape=(784,)),
+	tf.keras.layers.Dense(10, input_shape=(784,)),
 	tf.keras.layers.Dense(units=8000000, activation=tf.nn.softmax)])
 # Define loss function
 def loss(model, input, targets):
