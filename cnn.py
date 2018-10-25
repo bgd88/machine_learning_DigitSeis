@@ -164,11 +164,11 @@ def main(unused_argv):
       tensors=tensors_to_log, every_n_iter=50)
 
 
-  # # Train the model
-  # digitSeis_classifier.train(
-  #     input_fn=train_input_fn,
-  #     steps=1,
-  #     hooks=[logging_hook])
+  # Train the model
+  digitSeis_classifier.train(
+      input_fn=train_input_fn,
+      steps=1,
+      hooks=[logging_hook])
 
   # Evaluate the model and print results
   eval_results = digitSeis_classifier.evaluate(input_fn=eval_input_fn)
