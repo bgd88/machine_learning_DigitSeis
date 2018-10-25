@@ -46,7 +46,7 @@ print(training_tensor)
 # neuralNet = DigitSeisModel
 
 neuralNet = tf.keras.Sequential([
-	tf.keras.layers.Dense(1000000, input_shape=(784,)),
+	tf.keras.layers.Dense(10, input_shape=(784,)),
 	tf.keras.layers.Dense(units=8000000, activation=tf.nn.softmax)])
 # Define loss function
 def loss(model, input, targets):
@@ -68,6 +68,8 @@ for (i, (x, y)) in enumerate(training_tensor):
     print("DEBUG: ")
     print(x)
     print(y)
+    x=tf.to_float(x)
+    y=tf.to_float(y)
     grads = grad(neuralNet, x, y)
     # Apply the gradient to the model
     optimizer.apply_gradients(zip(grads, neuralNet.variables),
