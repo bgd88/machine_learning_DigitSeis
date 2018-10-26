@@ -8,6 +8,7 @@ import numpy as np
 import csv
 import tensorflow as tf
 import re
+import math
 
 
 BATCH_SIZE=200
@@ -167,7 +168,7 @@ def main(unused_argv):
   logging_hook = tf.train.LoggingTensorHook(
       tensors=tensors_to_log, every_n_iter=50)
 
-  for i in range(0, ceil(GLOBAL_STEP/EVAL_PERIOD)):
+  for i in range(0, math.ceil(GLOBAL_STEP/EVAL_PERIOD)):
     # Train the model
     digitSeis_classifier.train(
         input_fn=train_input_fn,
