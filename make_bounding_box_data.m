@@ -24,7 +24,7 @@ clear all;
 diag=0;
 
 % single mat or directory read in
-singlemat=true;
+singlemat=false;
 
 % csv mode
 csv_on=false;

@@ -10,6 +10,10 @@ import tensorflow as tf
 import re
 
 
+BATCH_SIZE=200
+GLOBAL_STEP=20000
+EVAL_PERIOD=500
+
 tf.logging.set_verbosity(tf.logging.INFO)
 
 
@@ -112,7 +116,7 @@ def _parse_function(filename, label):
   image_resized = tf.image.resize_images(image_decoded, [100, 200])
   return image_resized, label
 
-def train_input_fn(batch_size=100):
+def train_input_fn(batch_size=BATCH_SIZE):
   """An input function for training"""
   # Get the path to the jpg files
   filenames = glob.glob(dataDir + "train_jpg/*")
@@ -132,7 +136,7 @@ def train_input_fn(batch_size=100):
   # Return the dataset.
   return dataset
 
-def eval_input_fn(batch_size=100):
+def eval_input_fn(batch_size=BATCH_SIZE):
   """A function to evaluate how well model perform"""
   filenames = glob.glob(dataDir + "test_jpg/*")
 
@@ -163,16 +167,16 @@ def main(unused_argv):
   logging_hook = tf.train.LoggingTensorHook(
       tensors=tensors_to_log, every_n_iter=50)
 
+  for i in range(0, ceil(GLOBAL_STEP/EVAL_PERIOD)):
+    # Train the model
+    digitSeis_classifier.train(
+        input_fn=train_input_fn,
+        steps=EVAL_PERIOD,
+        hooks=[logging_hook])
 
-  # Train the model
-  digitSeis_classifier.train(
-      input_fn=train_input_fn,
-      steps=1,
-      hooks=[logging_hook])
-
-  # Evaluate the model and print results
-  eval_results = digitSeis_classifier.evaluate(input_fn=eval_input_fn)
-  print(eval_results)
+    # Evaluate the model and print results
+    eval_results = digitSeis_classifier.evaluate(input_fn=eval_input_fn)
+    print(eval_results)
 
 
 if __name__ == "__main__":
