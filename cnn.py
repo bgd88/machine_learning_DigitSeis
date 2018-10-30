@@ -12,8 +12,8 @@ import math
 
 
 BATCH_SIZE=200
-GLOBAL_STEP=20000
-EVAL_PERIOD=500
+GLOBAL_STEP=100000
+EVAL_PERIOD=250
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
