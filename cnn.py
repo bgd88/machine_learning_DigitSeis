@@ -14,6 +14,7 @@ import math
 BATCH_SIZE=200
 GLOBAL_STEP=100000
 EVAL_PERIOD=250
+DATA_PER_STEP = 2000
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -130,7 +131,8 @@ def train_input_fn(batch_size=BATCH_SIZE):
   dataset = dataset.map(_parse_function)
 
   # Shuffle, repeat, and batch the examples.
-  dataset = dataset.shuffle(1000).repeat().batch(batch_size)
+  shuffle_function = tf.contrib.data.shuffle_and_repeat(DATA_PER_STEP)
+  dataset = dataset.apply(shuffle_function).batch(batch_size)
 
   print(dataset.output_shapes)
 
