@@ -94,6 +94,7 @@ def cnn_model_fn(features, labels, mode):
 
   # Calculate Loss (for both TRAIN and EVAL modes)
   loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits)
+  tf.summary.scalar('accuracy', accuracy[1])
 
   # Configure the Training Op (for TRAIN mode)
   if mode == tf.estimator.ModeKeys.TRAIN:
