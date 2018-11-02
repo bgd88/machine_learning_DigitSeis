@@ -126,20 +126,33 @@ def _parse_function(filename, label):
 def train_input_fn(batch_size=BATCH_SIZE):
   """An input function for training"""
   # Get the path to the jpg files
-  filenames = glob.glob(dataDir + "train_jpg/*")
+  filenames0 = glob.glob(dataDir + "train_jpg_0/*")
+  filenames1 = glob.glob(dataDir + "train_jpg_1/*")
+  filenames2 = glob.glob(dataDir + "train_jpg_2/*")
+
 
   # `labels[i]` is the label for the image in `filenames[i].
-  labels = tf.constant([int(re.search('/([0-2])_', filename).group(1)) for filename in filenames])
-  print(labels)
+  labels0 = tf.constant([int(re.search('/([0-2])_', filename).group(1)) for filename in filenames0])
+  labels1 = tf.constant([int(re.search('/([0-2])_', filename).group(1)) for filename in filenames1])
+  labels2 = tf.constant([int(re.search('/([0-2])_', filename).group(1)) for filename in filenames2])
 
-  dataset = tf.data.Dataset.from_tensor_slices((filenames, labels))
-  dataset = dataset.map(_parse_function)
+
+
+  dataset0 = tf.data.Dataset.from_tensor_slices((filenames0, labels0))
+  dataset0 = dataset0.map(_parse_function)
+  dataset1 = tf.data.Dataset.from_tensor_slices((filenames1, labels1))
+  dataset1 = dataset1.map(_parse_function)
+  dataset2 = tf.data.Dataset.from_tensor_slices((filenames2, labels2))
+  dataset2 = dataset2.map(_parse_function)
 
   # Shuffle, repeat, and batch the examples.
   shuffle_function = tf.contrib.data.shuffle_and_repeat(DATA_PER_STEP)
-  dataset = dataset.apply(shuffle_function).batch(batch_size)
+  dataset0 = dataset0.apply(shuffle_function).batch(batch_size)
+  dataset1 = dataset1.apply(shuffle_function).batch(batch_size)
+  dataset2 = dataset2.apply(shuffle_function).batch(batch_size)
 
-  print(dataset.output_shapes)
+  dataset = dataset0.concatenate(dataset1).concatenate(dataset2) 
+
 
   # Return the dataset.
   return dataset
@@ -174,14 +187,13 @@ def main(unused_argv):
   tensors_to_log = {"probabilities": "softmax_tensor"}
   logging_hook = tf.train.LoggingTensorHook(
       tensors=tensors_to_log, every_n_iter=50)
-  debugging_hook = tf_debug.TensorBoardDebugHook("127.0.0.1:6007")
 
   for i in range(0, math.ceil(GLOBAL_STEP/EVAL_PERIOD)):
     # Train the model
     digitSeis_classifier.train(
         input_fn=train_input_fn,
         steps=EVAL_PERIOD,
-        hooks=[logging_hook, debugging_hook])
+        hooks=[logging_hook])
 
     # Evaluate the model and print results
     eval_results = digitSeis_classifier.evaluate(input_fn=eval_input_fn)
