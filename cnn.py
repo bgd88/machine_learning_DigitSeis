@@ -9,6 +9,7 @@ import csv
 import tensorflow as tf
 import re
 import math
+from tensorflow.python import debug as tf_debug
 
 
 BATCH_SIZE=200
@@ -173,13 +174,14 @@ def main(unused_argv):
   tensors_to_log = {"probabilities": "softmax_tensor"}
   logging_hook = tf.train.LoggingTensorHook(
       tensors=tensors_to_log, every_n_iter=50)
+  debugging_hook = tf_debug.TensorBoardDebugHook("127.0.0.1:6007")
 
   for i in range(0, math.ceil(GLOBAL_STEP/EVAL_PERIOD)):
     # Train the model
     digitSeis_classifier.train(
         input_fn=train_input_fn,
         steps=EVAL_PERIOD,
-        hooks=[logging_hook])
+        hooks=[logging_hook, debugging_hook])
 
     # Evaluate the model and print results
     eval_results = digitSeis_classifier.evaluate(input_fn=eval_input_fn)
