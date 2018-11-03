@@ -9,11 +9,13 @@ import csv
 import tensorflow as tf
 import re
 import math
+from tensorflow.python import debug as tf_debug
 
 
 BATCH_SIZE=200
-GLOBAL_STEP=20000
-EVAL_PERIOD=500
+GLOBAL_STEP=100000
+EVAL_PERIOD=250
+DATA_PER_STEP = 2000
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -94,6 +96,13 @@ def cnn_model_fn(features, labels, mode):
   # Calculate Loss (for both TRAIN and EVAL modes)
   loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits)
 
+  # Compute evaluation metrics
+  accuracy = tf.metrics.accuracy(labels=labels,
+                                 predictions=predictions["classes"],
+                                 name='acc_op')
+  metrics = {'accuracy': accuracy}
+  tf.summary.scalar('accuracy', accuracy[1])
+
   # Configure the Training Op (for TRAIN mode)
   if mode == tf.estimator.ModeKeys.TRAIN:
     optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001)
@@ -103,11 +112,8 @@ def cnn_model_fn(features, labels, mode):
     return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
 
   # Add evaluation metrics (for EVAL mode)
-  eval_metric_ops = {
-      "accuracy": tf.metrics.accuracy(
-          labels=labels, predictions=predictions["classes"])}
   return tf.estimator.EstimatorSpec(
-      mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
+      mode=mode, loss=loss, eval_metric_ops=metrics)
 
 # Reads an image from a file, decodes it into a dense tensor, and resizes it
 # to a fixed shape.
@@ -120,19 +126,33 @@ def _parse_function(filename, label):
 def train_input_fn(batch_size=BATCH_SIZE):
   """An input function for training"""
   # Get the path to the jpg files
-  filenames = glob.glob(dataDir + "train_jpg/*")
+  filenames0 = glob.glob(dataDir + "train_jpg_0/*")
+  filenames1 = glob.glob(dataDir + "train_jpg_1/*")
+  filenames2 = glob.glob(dataDir + "train_jpg_2/*")
+
 
   # `labels[i]` is the label for the image in `filenames[i].
-  labels = tf.constant([int(re.search('/([0-2])_', filename).group(1)) for filename in filenames])
-  print(labels)
+  labels0 = tf.constant([int(re.search('/([0-2])_', filename).group(1)) for filename in filenames0])
+  labels1 = tf.constant([int(re.search('/([0-2])_', filename).group(1)) for filename in filenames1])
+  labels2 = tf.constant([int(re.search('/([0-2])_', filename).group(1)) for filename in filenames2])
 
-  dataset = tf.data.Dataset.from_tensor_slices((filenames, labels))
-  dataset = dataset.map(_parse_function)
+
+
+  dataset0 = tf.data.Dataset.from_tensor_slices((filenames0, labels0))
+  dataset0 = dataset0.map(_parse_function)
+  dataset1 = tf.data.Dataset.from_tensor_slices((filenames1, labels1))
+  dataset1 = dataset1.map(_parse_function)
+  dataset2 = tf.data.Dataset.from_tensor_slices((filenames2, labels2))
+  dataset2 = dataset2.map(_parse_function)
 
   # Shuffle, repeat, and batch the examples.
-  dataset = dataset.shuffle(1000).repeat().batch(batch_size)
+  shuffle_function = tf.contrib.data.shuffle_and_repeat(DATA_PER_STEP)
+  dataset0 = dataset0.apply(shuffle_function).batch(batch_size)
+  dataset1 = dataset1.apply(shuffle_function).batch(batch_size)
+  dataset2 = dataset2.apply(shuffle_function).batch(batch_size)
 
-  print(dataset.output_shapes)
+  dataset = dataset0.concatenate(dataset1).concatenate(dataset2) 
+
 
   # Return the dataset.
   return dataset
