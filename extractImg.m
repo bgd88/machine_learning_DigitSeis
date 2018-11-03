@@ -86,7 +86,7 @@ for k = 1:numel(cfilenames)
         if lnoise  % if including noise objects (i.e., all objects)
             indx = 1:numel(S);
         else  % if ignoring noise objects
-            indx = find([S.ID]>=0);
+            indx = find([S.ID]==0 | [S.ID]==2);
         end  % if lnoise
         rpix = cell2mat({S(indx).PixelIdxList}');
         Ibin(rpix) = true;
