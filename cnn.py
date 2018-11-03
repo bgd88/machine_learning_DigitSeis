@@ -1,21 +1,24 @@
 #!/usr/bin/env python3
-import h5py
 import glob
-import pandas as pd
 from myPath import dataDir
-import matplotlib.pyplot as plt
 import numpy as np
 import csv
 import tensorflow as tf
 import re
 import math
 from tensorflow.python import debug as tf_debug
+import os
+from PIL import image
 
 
-BATCH_SIZE=200
-GLOBAL_STEP=100000
-EVAL_PERIOD=250
-DATA_PER_STEP = 2000
+BATCH_SIZE=128
+GLOBAL_STEP=50
+EVAL_PERIOD=1
+TRAIN_DATA_SIZE = 5000
+RESCALED_X = 20
+RESCALED_Y = 20
+NUM_CLASSES = 3
+TEST_DATA_SIZE = 1000
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -25,7 +28,7 @@ def cnn_model_fn(features, labels, mode):
   # Input Layer
   # Reshape X to 4-D tensor: [batch_size, width, height, channels]
   # JPG images of boudning box are 100x200 pixels, and have one color channel
-  input_layer = tf.reshape(features, [-1, 100, 200, 1])
+  input_layer = tf.reshape(features, [-1, RESCALED_X, RESCALED_Y, 1])
 
   # Convolutional Layer #1
   # Computes 32 features using a 5x5 filter with ReLU activation.
@@ -66,13 +69,13 @@ def cnn_model_fn(features, labels, mode):
   # Flatten tensor into a batch of vectors
   # Input Tensor Shape: [batch_size, 25, 50, 64]
   # Output Tensor Shape: [batch_size, 25 * 50 * 64]
-  pool2_flat = tf.reshape(pool2, [-1, 25 * 50 * 64])
+  pool2_flat = tf.layers.Flatten(pool2)
 
   # Dense Layer
   # Densely connected layer with 1024 neurons
   # Input Tensor Shape: [batch_size, 25 * 50 * 64]
   # Output Tensor Shape: [batch_size, 1024]
-  dense = tf.layers.dense(inputs=pool2_flat, units=1024, activation=tf.nn.relu)
+  dense = tf.layers.dense(inputs=pool2_flat, units=1000, activation=tf.nn.relu)
 
   # Add dropout operation; 0.6 probability that element will be kept
   dropout = tf.layers.dropout(
@@ -81,7 +84,7 @@ def cnn_model_fn(features, labels, mode):
   # Logits layer
   # Input Tensor Shape: [batch_size, 1024]
   # Output Tensor Shape: [batch_size, 3]
-  logits = tf.layers.dense(inputs=dropout, units=3)
+  logits = tf.layers.dense(inputs=dropout, units=NUM_CLASSES)
 
   predictions = {
       # Generate predictions (for PREDICT and EVAL mode)
@@ -115,64 +118,98 @@ def cnn_model_fn(features, labels, mode):
   return tf.estimator.EstimatorSpec(
       mode=mode, loss=loss, eval_metric_ops=metrics)
 
-# Reads an image from a file, decodes it into a dense tensor, and resizes it
-# to a fixed shape.
-def _parse_function(filename, label):
-  image_string = tf.read_file(filename)
-  image_decoded = tf.image.decode_jpeg(image_string)
-  image_resized = tf.image.resize_images(image_decoded, [100, 200])
-  return image_resized, label
-
 def train_input_fn(batch_size=BATCH_SIZE):
   """An input function for training"""
+
   # Get the path to the jpg files
-  filenames0 = glob.glob(dataDir + "train_jpg_0/*")
-  filenames1 = glob.glob(dataDir + "train_jpg_1/*")
-  filenames2 = glob.glob(dataDir + "train_jpg_2/*")
+  current_dir = os.getcwd()
+  train_0 = glob.glob(current_dir + "train_jpg_0/*")
+  train_1 = glob.glob(current_dir + "train_jpg_1/*")
+  train_2 = glob.glob(current_dir + "train_jpg_2/*")
 
-
-  # `labels[i]` is the label for the image in `filenames[i].
-  labels0 = tf.constant([int(re.search('/([0-2])_', filename).group(1)) for filename in filenames0])
-  labels1 = tf.constant([int(re.search('/([0-2])_', filename).group(1)) for filename in filenames1])
-  labels2 = tf.constant([int(re.search('/([0-2])_', filename).group(1)) for filename in filenames2])
+  x_train, y_train = get_train_data(TRAIN_DATA_SIZE)
 
 
 
-  dataset0 = tf.data.Dataset.from_tensor_slices((filenames0, labels0))
-  dataset0 = dataset0.map(_parse_function)
-  dataset1 = tf.data.Dataset.from_tensor_slices((filenames1, labels1))
-  dataset1 = dataset1.map(_parse_function)
-  dataset2 = tf.data.Dataset.from_tensor_slices((filenames2, labels2))
-  dataset2 = dataset2.map(_parse_function)
+  x_train = x_train.reshape(x_train.shape[0], RESCALED_X, RESCALED_Y, 1)
+  input_shape = (RESCALED_X, RESCALED_Y, 1)
 
-  # Shuffle, repeat, and batch the examples.
-  shuffle_function = tf.contrib.data.shuffle_and_repeat(DATA_PER_STEP)
-  dataset0 = dataset0.apply(shuffle_function).batch(batch_size)
-  dataset1 = dataset1.apply(shuffle_function).batch(batch_size)
-  dataset2 = dataset2.apply(shuffle_function).batch(batch_size)
+  x_train = x_train.astype('float32')
+  x_train /= 255
 
-  dataset = dataset0.concatenate(dataset1).concatenate(dataset2) 
+  # Assume that each row of `features` corresponds to the same row as `labels`.
+  assert x_train.shape[0] == y_train.shape[0]
 
+  x_train_placeholder = tf.placeholder(x_train.dtype, x_train.shape)
+  y_train_placeholder = tf.placeholder(y_train.dtype, y_train.shape)
+
+  dataset = tf.data.Dataset.from_tensor_slices((x_train_placeholder, y_train_placeholder))
+  shuffle_function = tf.contrib.data.shuffle_and_repeat(TRAIN_DATA_SIZE*NUM_CLASSES)
+  dataset = dataset.apply(shuffle_function).batch(batch_size)
+  iterator = dataset.make_initializable_iterator()
+
+  sess.run(iterator.initializer, feed_dict={x_train_placeholder: x_train,
+                                          y_train_placeholder: y_train})
 
   # Return the dataset.
   return dataset
 
 def eval_input_fn(batch_size=BATCH_SIZE):
   """A function to evaluate how well model perform"""
-  filenames = glob.glob(dataDir + "test_jpg/*")
+  test = glob.glob(current_dir + "test_jpg/*")
 
-  # `labels[i]` is the label for the image in `filenames[i].
-  labels = tf.constant([int(re.search('/([0-2])_', filename).group(1)) for filename in filenames])
-  print(labels)
+  x_test, y_test = get_test_data(TEST_DATA_SIZE)
 
-  dataset = tf.data.Dataset.from_tensor_slices((filenames, labels))
-  dataset = dataset.map(_parse_function)
+  x_test = t_test.reshape(x_test.shape[0], RESCALED_X, RESCALED_Y, 1)
+  input_shape = (RESCALED_X, RESCALED_Y, 1)
+  x_test = x_test.astype('float32')
+  x_test /= 255
+
+  # Assume that each row of `features` corresponds to the same row as `labels`.
+  assert x_test.shape[0] == y_test.shape[0]
+
+  x_test_placeholder = tf.placeholder(x_test.dtype, x_test.shape)
+  y_test_placeholder = tf.placeholder(y_test.dtype, y_test.shape)
+
+  dataset = tf.data.Dataset.from_tensor_slices((x_test_placeholder, y_test_placeholder))
   dataset = dataset.batch(batch_size)
+  iterator = dataset.make_initializable_iterator()
 
-  print(dataset.output_shapes)
+  sess.run(iterator.initializer, feed_dict={x_test_placeholder: x_test,
+                                          y_test_placeholder: y_test})
 
   # Return the dataset.
   return dataset
+
+
+
+def get_image_data(filename):
+  image = Image.open(filename)
+  image = image.resize((RESCALED_X, RESCALED_Y))
+  return np.array(image)
+
+def get_train_data(n):
+  train_data = []
+  train_labels = []
+  for f in train_0[:n]:
+    train_data.append(get_image_data(f))
+    train_labels.append(0)
+  for f in train_1[:n]:
+    train_data.append(get_image_data(f))
+    train_labels.append(1)
+  for f in train_2[:n]:
+    train_data.append(get_image_data(f))
+    train_labels.append(2)
+  return np.asarray(train_data), np.asarray(train_labels)
+
+def get_test_data(n):
+  test_data = []
+  test_labels = []
+  for f in test[:n]:
+    test_data.append(get_image_data(f))
+    label = (f.split('/')[-1]).split('_')[0]
+    test_labels.append(int(label))
+  return np.asarray(test_data), np.asarray(test_labels)
 
 
 
