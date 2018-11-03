@@ -8,7 +8,7 @@ import re
 import math
 from tensorflow.python import debug as tf_debug
 import os
-from PIL import image
+from PIL import Image
 
 
 BATCH_SIZE=128
@@ -69,7 +69,7 @@ def cnn_model_fn(features, labels, mode):
   # Flatten tensor into a batch of vectors
   # Input Tensor Shape: [batch_size, 25, 50, 64]
   # Output Tensor Shape: [batch_size, 25 * 50 * 64]
-  pool2_flat = tf.layers.Flatten(pool2)
+  pool2_flat = tf.reshape(pool2, [-1, int((RESCALED_X/4)*(RESCALED_Y/4)*64)])
 
   # Dense Layer
   # Densely connected layer with 1024 neurons
@@ -127,7 +127,7 @@ def train_input_fn(batch_size=BATCH_SIZE):
   train_1 = glob.glob(current_dir + "train_jpg_1/*")
   train_2 = glob.glob(current_dir + "train_jpg_2/*")
 
-  x_train, y_train = get_train_data(TRAIN_DATA_SIZE)
+  x_train, y_train = get_train_data(TRAIN_DATA_SIZE, train_0, train_1, train_2)
 
 
 
@@ -136,6 +136,7 @@ def train_input_fn(batch_size=BATCH_SIZE):
 
   x_train = x_train.astype('float32')
   x_train /= 255
+  y_train = y_train.astype('int32')
 
   # Assume that each row of `features` corresponds to the same row as `labels`.
   assert x_train.shape[0] == y_train.shape[0]
@@ -148,7 +149,8 @@ def train_input_fn(batch_size=BATCH_SIZE):
   dataset = dataset.apply(shuffle_function).batch(batch_size)
   iterator = dataset.make_initializable_iterator()
 
-  sess.run(iterator.initializer, feed_dict={x_train_placeholder: x_train,
+  with tf.Session() as sess:
+    sess.run(iterator.initializer, feed_dict={x_train_placeholder: x_train,
                                           y_train_placeholder: y_train})
 
   # Return the dataset.
@@ -158,12 +160,13 @@ def eval_input_fn(batch_size=BATCH_SIZE):
   """A function to evaluate how well model perform"""
   test = glob.glob(current_dir + "test_jpg/*")
 
-  x_test, y_test = get_test_data(TEST_DATA_SIZE)
+  x_test, y_test = get_test_data(TEST_DATA_SIZE, test)
 
   x_test = t_test.reshape(x_test.shape[0], RESCALED_X, RESCALED_Y, 1)
   input_shape = (RESCALED_X, RESCALED_Y, 1)
   x_test = x_test.astype('float32')
   x_test /= 255
+  y_test = y_test.astype('int32')
 
   # Assume that each row of `features` corresponds to the same row as `labels`.
   assert x_test.shape[0] == y_test.shape[0]
@@ -175,7 +178,8 @@ def eval_input_fn(batch_size=BATCH_SIZE):
   dataset = dataset.batch(batch_size)
   iterator = dataset.make_initializable_iterator()
 
-  sess.run(iterator.initializer, feed_dict={x_test_placeholder: x_test,
+  with tf.Session() as sess:
+    sess.run(iterator.initializer, feed_dict={x_test_placeholder: x_test,
                                           y_test_placeholder: y_test})
 
   # Return the dataset.
@@ -188,7 +192,7 @@ def get_image_data(filename):
   image = image.resize((RESCALED_X, RESCALED_Y))
   return np.array(image)
 
-def get_train_data(n):
+def get_train_data(n, train_0, train_1, train_2):
   train_data = []
   train_labels = []
   for f in train_0[:n]:
@@ -202,7 +206,7 @@ def get_train_data(n):
     train_labels.append(2)
   return np.asarray(train_data), np.asarray(train_labels)
 
-def get_test_data(n):
+def get_test_data(n, test):
   test_data = []
   test_labels = []
   for f in test[:n]:
