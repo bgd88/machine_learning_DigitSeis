@@ -41,43 +41,44 @@ class GrayScaleDataProvider(BaseDataProvider):
         return create_image_and_label(self.nx, self.ny, **self.kwargs)
 
 def create_image_and_label(nx,ny, cnt = 10, r_min = 5, r_max = 50,
-                           border = 92, sigma = 20, alpha=0.9, width=5):
+                           border = 92, sigma = 20, alpha=0.9, xWidth=3, yWidth=20):
 
 
-    image = np.ones((nx, ny, 1))
-    label = np.zeros((nx, ny, 3), dtype=np.bool)
-    mask = np.zeros((nx, ny), dtype=np.bool)
+    image = np.ones((ny, nx, 1))
+    label = np.zeros((ny, nx, 3), dtype=np.bool)
     for _ in range(cnt):
-        a = np.random.randint(border, nx-border)
-        b = np.random.randint(border, ny-border)
+        a = np.random.randint(border, ny-border)
+        b = np.random.randint(border, nx-border)
         r = np.random.randint(r_min, r_max)
         h = np.random.randint(1,100)
 
-        y,x = np.ogrid[-a:nx-a, -b:ny-b]
+        x,y = np.ogrid[-a:ny-a, -b:nx-b]
         m = x*x + y*y <= r*r
-        mask = np.logical_or(mask, m)
-
+        # mask = np.logical_or(mask, m)
         image[m] = h
 
     yStart = np.random.randint(0, 400)
     delY = np.random.randint(290, 310)
     h2 = np.random.randint(250,255)
-    mask = np.zeros((nx, ny))
+    mask = np.zeros((ny, nx))
     for tNum in range(3):
         y = yWidth*generate_ts(nx, alpha) + yStart + tNum*delY
         for ii in np.arange(nx):
-            for yOff in np.arange(-yWidth, yWidth+1):
-                for xOff in np.arange(-xWidth, xWidth+1):
-                    xInd = ii + xOff
-                    pInd = y[ii] + yOff
+        #     for yOff in np.arange(-yWidth, yWidth+1):
+        #         for xOff in np.arange(-xWidth, xWidth+1):
+                    # xInd = ii + xOff
+                    # pInd = y[ii] + yOff
+                    xMin = max([0, ii-xWidth])
+                    xMax = min([nx, ii+xWidth])
+                    yMin = max([0, y[ii]-yWidth])
+                    yMax = min([ny, y[ii]+yWidth])
                     try:
-                        mask[( pInd, xInd)] = 1
-                        image[(pInd, xInd)] = h2
+                        mask[yMin:yMax, xMin:xMax] = 1
+                        image[yMin:yMax, xMin:xMax] = h2
                     except:
                         continue
 
-
-    label[mask, 1] = 1
+    label[mask==1, 1] = 1
 
     image += np.random.normal(scale=sigma, size=image.shape)
     image -= np.amin(image)
@@ -92,3 +93,11 @@ def create_image_and_label(nx,ny, cnt = 10, r_min = 5, r_max = 50,
         for t in range(nx):
             y[t] = alpha*y[t-1] + w[t]
         return np.round(y).astype(int)
+
+    def plot_image_label(image, label):
+        fig, ax = plt.subplots(1,2, figsize=[15,5])
+        ax[0].imshow(image[:, :, 0], cmap='bone')
+        ax[0].set_title('Test Image', fontsize=20)
+        ax[1].imshow(label[:, :, 1])
+        ax[1].set_title('True Label', fontsize=20)
+        plt.savefig('Test_Image_Labels.pdf', dpi=100, fmt='pdf')
