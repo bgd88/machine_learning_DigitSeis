@@ -40,7 +40,8 @@ class GrayScaleDataProvider(BaseDataProvider):
     def _next_data(self):
         return create_image_and_label(self.nx, self.ny, **self.kwargs)
 
-def create_image_and_label(nx,ny, cnt = 10, r_min = 5, r_max = 50, border = 92, sigma = 20):
+def create_image_and_label(nx,ny, cnt = 10, r_min = 5, r_max = 50,
+                           border = 92, sigma = 20, alpha=0.9, width=5):
 
 
     image = np.ones((nx, ny, 1))
@@ -50,15 +51,31 @@ def create_image_and_label(nx,ny, cnt = 10, r_min = 5, r_max = 50, border = 92, 
         a = np.random.randint(border, nx-border)
         b = np.random.randint(border, ny-border)
         r = np.random.randint(r_min, r_max)
-        h = np.random.randint(1,255)
+        h = np.random.randint(1,100)
 
         y,x = np.ogrid[-a:nx-a, -b:ny-b]
         m = x*x + y*y <= r*r
         mask = np.logical_or(mask, m)
 
-        ystart = np.random.randint(0, 400)
-        delY = np.random.randint(290, 310)
         image[m] = h
+
+    yStart = np.random.randint(0, 400)
+    delY = np.random.randint(290, 310)
+    h2 = np.random.randint(250,255)
+    mask = np.zeros((nx, ny))
+    for tNum in range(3):
+        y = yWidth*generate_ts(nx, alpha) + yStart + tNum*delY
+        for ii in np.arange(nx):
+            for yOff in np.arange(-yWidth, yWidth+1):
+                for xOff in np.arange(-xWidth, xWidth+1):
+                    xInd = ii + xOff
+                    pInd = y[ii] + yOff
+                    try:
+                        mask[( pInd, xInd)] = 1
+                        image[(pInd, xInd)] = h2
+                    except:
+                        continue
+
 
     label[mask, 1] = 1
 
@@ -69,9 +86,9 @@ def create_image_and_label(nx,ny, cnt = 10, r_min = 5, r_max = 50, border = 92, 
     return image, label[..., 1]
 
     def generate_ts(nx, alpha):
-        np.random.seed(1)
+        # np.random.seed(1)
         #x = w = np.random.randint(-high, high, size=nx)
         y = w = np.random.normal(size=nx)
         for t in range(nx):
             y[t] = alpha*y[t-1] + w[t]
-        return np.round(y)
+        return np.round(y).astype(int)
