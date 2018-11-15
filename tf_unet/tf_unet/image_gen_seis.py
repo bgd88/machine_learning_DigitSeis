@@ -40,7 +40,7 @@ class GrayScaleDataProvider(BaseDataProvider):
     def _next_data(self):
         return create_image_and_label(self.nx, self.ny, **self.kwargs)
 
-def create_image_and_label(nx,ny, cnt = 10, r_min = 5, r_max = 50, border = 92, sigma = 20, rectangles=False):
+def create_image_and_label(nx,ny, cnt = 10, r_min = 5, r_max = 50, border = 92, sigma = 20):
 
 
     image = np.ones((nx, ny, 1))
@@ -56,6 +56,8 @@ def create_image_and_label(nx,ny, cnt = 10, r_min = 5, r_max = 50, border = 92, 
         m = x*x + y*y <= r*r
         mask = np.logical_or(mask, m)
 
+        ystart = np.random.randint(0, 400)
+        delY = np.random.randint(290, 310)
         image[m] = h
 
     label[mask, 1] = 1
@@ -64,11 +66,12 @@ def create_image_and_label(nx,ny, cnt = 10, r_min = 5, r_max = 50, border = 92, 
     image -= np.amin(image)
     image /= np.amax(image)
 
-    if rectangles:
-        return image, label
-    else:
-        return image, label[..., 1]
+    return image, label[..., 1]
 
-# def generate_ts(nx, high):
-#     np.random.seed(1)
-#     x = w = np.random.randint()
+    def generate_ts(nx, alpha):
+        np.random.seed(1)
+        #x = w = np.random.randint(-high, high, size=nx)
+        y = w = np.random.normal(size=nx)
+        for t in range(nx):
+            y[t] = alpha*y[t-1] + w[t]
+        return np.round(y)
