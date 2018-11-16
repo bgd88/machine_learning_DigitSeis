@@ -122,7 +122,7 @@ def train_input_fn(batch_size=BATCH_SIZE):
   """An input function for training"""
 
   # Get the path to the jpg files
-  current_dir = os.getcwd()
+  current_dir = dataDir
   train_0 = glob.glob(current_dir + "train_jpg_0/*")
   train_1 = glob.glob(current_dir + "train_jpg_1/*")
   train_2 = glob.glob(current_dir + "train_jpg_2/*")
@@ -158,7 +158,7 @@ def train_input_fn(batch_size=BATCH_SIZE):
 
 def eval_input_fn(batch_size=BATCH_SIZE):
   """A function to evaluate how well model perform"""
-  current_dir = os.getcwd()
+  current_dir = dataDir
   test = glob.glob(current_dir + "test_jpg/*")
 
   x_test, y_test = get_test_data(TEST_DATA_SIZE, test)
