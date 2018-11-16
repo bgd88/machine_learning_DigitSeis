@@ -129,7 +129,7 @@ def train_input_fn(batch_size=BATCH_SIZE):
 
   x_train, y_train = get_train_data(TRAIN_DATA_SIZE, train_0, train_1, train_2)
 
-
+  print(x_train)
 
   x_train = x_train.reshape(x_train.shape[0], RESCALED_X, RESCALED_Y, 1)
   input_shape = (RESCALED_X, RESCALED_Y, 1)
@@ -144,25 +144,26 @@ def train_input_fn(batch_size=BATCH_SIZE):
   x_train_placeholder = tf.placeholder(x_train.dtype, x_train.shape)
   y_train_placeholder = tf.placeholder(y_train.dtype, y_train.shape)
 
-  dataset = tf.data.Dataset.from_tensor_slices((x_train_placeholder, y_train_placeholder))
+  dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
   shuffle_function = tf.contrib.data.shuffle_and_repeat(TRAIN_DATA_SIZE*NUM_CLASSES)
   dataset = dataset.apply(shuffle_function).batch(batch_size)
-  iterator = dataset.make_initializable_iterator()
+  # iterator = dataset.make_initializable_iterator()
 
-  with tf.Session() as sess:
-    sess.run(iterator.initializer, feed_dict={x_train_placeholder: x_train,
-                                          y_train_placeholder: y_train})
+  # with tf.Session() as sess:
+  #   sess.run(iterator.initializer, feed_dict={x_train_placeholder: x_train,
+  #                                         y_train_placeholder: y_train})
 
   # Return the dataset.
   return dataset
 
 def eval_input_fn(batch_size=BATCH_SIZE):
   """A function to evaluate how well model perform"""
+  current_dir = os.getcwd()
   test = glob.glob(current_dir + "test_jpg/*")
 
   x_test, y_test = get_test_data(TEST_DATA_SIZE, test)
 
-  x_test = t_test.reshape(x_test.shape[0], RESCALED_X, RESCALED_Y, 1)
+  x_test = x_test.reshape(x_test.shape[0], RESCALED_X, RESCALED_Y, 1)
   input_shape = (RESCALED_X, RESCALED_Y, 1)
   x_test = x_test.astype('float32')
   x_test /= 255
@@ -174,13 +175,13 @@ def eval_input_fn(batch_size=BATCH_SIZE):
   x_test_placeholder = tf.placeholder(x_test.dtype, x_test.shape)
   y_test_placeholder = tf.placeholder(y_test.dtype, y_test.shape)
 
-  dataset = tf.data.Dataset.from_tensor_slices((x_test_placeholder, y_test_placeholder))
+  dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test))
   dataset = dataset.batch(batch_size)
-  iterator = dataset.make_initializable_iterator()
+  # iterator = dataset.make_initializable_iterator()
 
-  with tf.Session() as sess:
-    sess.run(iterator.initializer, feed_dict={x_test_placeholder: x_test,
-                                          y_test_placeholder: y_test})
+  # with tf.Session() as sess:
+  #   sess.run(iterator.initializer, feed_dict={x_test_placeholder: x_test,
+  #                                         y_test_placeholder: y_test})
 
   # Return the dataset.
   return dataset
