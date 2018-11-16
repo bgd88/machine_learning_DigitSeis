@@ -15,9 +15,9 @@
 '''
 Toy example, generates images at random that can be used for training
 
-Created on Jul 28, 2016
+Created on Nov. 15, 2018
 
-author: jakeret
+author: bgd88
 '''
 from __future__ import print_function, division, absolute_import, unicode_literals
 
@@ -83,21 +83,21 @@ def create_image_and_label(nx,ny, cnt = 10, r_min = 5, r_max = 50,
     image += np.random.normal(scale=sigma, size=image.shape)
     image -= np.amin(image)
     image /= np.amax(image)
-
     return image, label[..., 1]
 
-    def generate_ts(nx, alpha):
-        # np.random.seed(1)
-        #x = w = np.random.randint(-high, high, size=nx)
-        y = w = np.random.normal(size=nx)
-        for t in range(nx):
-            y[t] = alpha*y[t-1] + w[t]
-        return np.round(y).astype(int)
+def generate_ts(nx, alpha):
+    # np.random.seed(1)
+    #x = w = np.random.randint(-high, high, size=nx)
+    y = w = np.random.normal(size=nx)
+    for t in range(nx):
+        y[t] = alpha*y[t-1] + w[t]
+    return np.round(y).astype(int)
 
-    def plot_image_label(image, label):
-        fig, ax = plt.subplots(1,2, figsize=[15,5])
-        ax[0].imshow(image[:, :, 0], cmap='bone')
-        ax[0].set_title('Test Image', fontsize=20)
-        ax[1].imshow(label[:, :, 1])
-        ax[1].set_title('True Label', fontsize=20)
-        plt.savefig('Test_Image_Labels.pdf', dpi=100, fmt='pdf')
+def plot_image_label(image, label):
+    fig, ax = plt.subplots(1,2, figsize=[15,5])
+    ax[0].imshow(image[:, :, 0], cmap='bone')
+    ax[0].set_title('Test Image', fontsize=20)
+    ax[1].imshow(label[:, :, 1])
+    ax[1].set_title('True Label', fontsize=20)
+    plt.savefig('Test_Image_Labels.pdf', dpi=100, fmt='pdf')
+    plt.close()
