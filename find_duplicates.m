@@ -34,20 +34,26 @@ end  % if numel(varargin) == 1
 if ~lorig  % if object structure input (uses less memory)
     sbox = cell2mat({S.BoundingBox}');
     for k = 1:numel(S)-1
-        xp = sbox(k,2) + [0 sbox(k,4)]; % x patch defining outline of this object
-        yp = sbox(k,1) + [0 sbox(k,3)]; % y patch defining outline of this object
+        xp = sbox(k,1) + [0 sbox(k,3)]; % x patch defining outline of this object
+        yp = sbox(k,2) + [0 sbox(k,4)]; % y patch defining outline of this object
         indx = findInside(xp,yp,sbox(k+1:end,:),0); % find sboxes that are inside
         if ~isempty(indx)
             rpix = [S(k).PixelIdxList];  % pixels of interest
             indx = indx + k;  % make sure the index points to index of sbox
-            for m = 1:numel(indx)
-                rpixt = [S(indx(m)).PixelIdxList]; % pixels to be checked
-                itmp = intersect(rpix,rpixt);
-                if ~isempty(itmp)
-                    itmp = reshape(itmp,[numel(itmp),1]);
-                    idup = [idup; itmp];
-                end  % if ~isempty(itmp)
-            end  % for m = 1:numel(indx)
+            rpixt = cell2mat({S(indx).PixelIdxList}');
+            itmp = intersect(rpix,rpixt);
+            if ~isempty(itmp)
+                itmp = reshape(itmp,[numel(itmp),1]);
+                idup = [idup; itmp];
+            end % if ~isempty(itmp)
+%             for m = 1:numel(indx)
+%                 rpixt = [S(indx(m)).PixelIdxList]; % pixels to be checked
+%                 itmp = intersect(rpix,rpixt);
+%                 if ~isempty(itmp)
+%                     itmp = reshape(itmp,[numel(itmp),1]);
+%                     idup = [idup; itmp];
+%                 end  % if ~isempty(itmp)
+%             end  % for m = 1:numel(indx)
         end  % if ~isempty(indx)
     end % for k = 1:numel(S)-1
 else
