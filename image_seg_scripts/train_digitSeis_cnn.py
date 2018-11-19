@@ -7,15 +7,16 @@ from tf_unet import unet
 from tf_unet import util
 
 plt.rcParams['image.cmap'] = 'bone'
-nx = 2000
+nx = 1000
 ny = 1000
 
-generator = image_gen_seis.DigitSeisDataProvider(nx, ny)
+generator = image_gen_seis_data.DigitSeisDataProvider(nx, ny)
 x_test, y_test = generator(1)
 fig, ax = plt.subplots(1,2, sharey=True, figsize=(8,4))
 ax[0].imshow(x_test[0,...,0], aspect="auto")
 ax[1].imshow(y_test[0,...,1], aspect="auto")
-plt.show()
+plt.savefig('Test_data_example.png')
+plt.close()
 
 
 net = unet.Unet(channels=generator.channels, n_class=generator.n_class,

@@ -46,14 +46,14 @@ class DigitSeisDataProvider(BaseDataProvider):
 def create_image_and_label(filename, nx, ny):
 
     label = np.zeros((ny, nx, 3), dtype=np.bool)
-    image, mask = read_mat_file(filename)
+    image, mask = read_mat_file(filename, nx, ny)
     label[mask>=0, 1] = 1
 
     image -= np.amin(image)
     image /= np.amax(image)
     return image, label[..., 1]
 
-def read_mat_file(filename):
+def read_mat_file(filename, nx, ny):
     f = h5py.File(filename, 'r')
 
     # Example of extracting variables - They are wrapped in lists for some reason
@@ -66,6 +66,12 @@ def read_mat_file(filename):
 
     image = np.reshape(imInt, [nr, nc, 1], order="F").astype(float)
     mask = np.reshape(pixID, [nr, nc], order="F")
+
+    maxNX = nc - nx - 1
+    xLow  = np.random.randint(0, maxNX)
+    xHigh = xLow + nx
+    image = image[:,xLow:xHigh,:]
+    mask = mask[:,xLow:xHigh]
     f.close()
     return image, mask
 
@@ -79,6 +85,6 @@ def plot_image_label(image, label):
     plt.close()
 
 if __name__ == '__main__':
-    generator = DigitSeisDataProvider(2000, 1000)
+    generator = DigitSeisDataProvider(1500, 1000)
     image, label = generator(1)
     plot_image_label(image, label)
