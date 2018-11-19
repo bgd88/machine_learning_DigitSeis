@@ -66,12 +66,12 @@ def read_mat_file(filename, nx, ny):
 
     image = np.reshape(imInt, [nr, nc, 1], order="F").astype(float)
     mask = np.reshape(pixID, [nr, nc], order="F")
-
-    maxNX = nc - nx - 1
-    xLow  = np.random.randint(0, maxNX)
-    xHigh = xLow + nx
-    image = image[:,xLow:xHigh,:]
-    mask = mask[:,xLow:xHigh]
+    if nx < nc:
+        maxNX = nc - nx - 1
+        xLow  = np.random.randint(0, maxNX)
+        xHigh = xLow + nx
+        image = image[:,xLow:xHigh,:]
+        mask = mask[:,xLow:xHigh]
     f.close()
     return image, mask
 
@@ -85,6 +85,6 @@ def plot_image_label(image, label):
     plt.close()
 
 if __name__ == '__main__':
-    generator = DigitSeisDataProvider(1500, 1000)
+    generator = DigitSeisDataProvider(2000, 1000)
     image, label = generator(1)
     plot_image_label(image, label)
