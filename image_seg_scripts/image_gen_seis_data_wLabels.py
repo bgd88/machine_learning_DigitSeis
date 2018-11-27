@@ -28,11 +28,10 @@ import matplotlib.pyplot as plt
 from tf_unet.image_util import BaseDataProvider
 from myPath import dataDir
 from count_crossings import return_images_withPixelCrossings
-# from scipy.ndimage import gaussian_filter
 
 class DigitSeisDataProvider(BaseDataProvider):
     channels = 1
-    n_class = 2
+    n_class = 4
 
     def __init__(self, nx, ny, binaryImage=True, numFiles=None, mostCrossings=False, **kwargs):
         super(DigitSeisDataProvider, self).__init__()
@@ -52,27 +51,20 @@ class DigitSeisDataProvider(BaseDataProvider):
     def _next_data(self):
         fn = np.random.choice(self.filenames)
         self.filesUsed.append(fn.split('/')[-1])
-        return create_image_and_label(fn , self.nx, self.ny)
-
-    def _process_labels(self, labels):
-        # We process labels in the create Image and label step so overwrite The
-        # base class and do nothing
-        return labels
+        return create_image_and_label(fn , self.nx, self.ny, **self.kwargs)
 
 def create_image_and_label(filename, nx, ny):
 
-    labels = np.zeros((ny, nx, 2), dtype=np.bool)
+    labels = np.zeros((ny, nx, 4), dtype=np.bool)
     image, mask = read_mat_file(filename, nx, ny)
-    # image[...,0] = gaussian_filter(image[...,0], 10)
+
     # Pixel Codings
     # -1 == Background
     #  0 == Trace
     #  1 == Time Mark
     #  2 == Crossing
-    # for ii, pixCode in enumerate([-1, 0, 1, 2]):
-    #     labels[mask==pixCode, ii] = 1
-    labels[mask == -1, 0] = 1
-    labels[mask >= 0, 1] = 1
+    for ii, pixCode in enumerate([-1, 0, 1, 2]):
+        labels[mask==pixCode, ii] = 1
     image -= np.amin(image)
     image /= np.amax(image)
     return image, labels
@@ -110,4 +102,4 @@ def plot_image_label(image, label, pixCode):
 if __name__ == '__main__':
     generator = DigitSeisDataProvider(2000, 1000)
     image, label = generator(1)
-    plot_image_label(image, label, 1)
+    plot_image_label(image, label, 3)
